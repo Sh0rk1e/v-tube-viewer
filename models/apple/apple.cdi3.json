@@ -1,0 +1,370 @@
+{
+	"Version": 3,
+	"Parameters": [
+		{
+			"Id": "ParamAngleX",
+			"GroupId": "",
+			"Name": "Angle X"
+		},
+		{
+			"Id": "ParamAngleY",
+			"GroupId": "",
+			"Name": "Angle Y"
+		},
+		{
+			"Id": "ParamAngleZ",
+			"GroupId": "",
+			"Name": "Angle Z"
+		},
+		{
+			"Id": "ParamEyeLOpen",
+			"GroupId": "",
+			"Name": "EyeL Open"
+		},
+		{
+			"Id": "ParamEyeLSmile",
+			"GroupId": "",
+			"Name": "EyeL Smile"
+		},
+		{
+			"Id": "ParamEyeROpen",
+			"GroupId": "",
+			"Name": "EyeR Open"
+		},
+		{
+			"Id": "ParamEyeRSmile",
+			"GroupId": "",
+			"Name": "EyeR Smile"
+		},
+		{
+			"Id": "ParamEyeBallX",
+			"GroupId": "",
+			"Name": "Eyeball X"
+		},
+		{
+			"Id": "ParamEyeBallY",
+			"GroupId": "",
+			"Name": "Eyeball Y"
+		},
+		{
+			"Id": "ParamBrowLY",
+			"GroupId": "",
+			"Name": "BrowL Y"
+		},
+		{
+			"Id": "ParamBrowRY",
+			"GroupId": "",
+			"Name": "BrowR Y"
+		},
+		{
+			"Id": "ParamBrowLX",
+			"GroupId": "",
+			"Name": "BrowL X"
+		},
+		{
+			"Id": "ParamBrowRX",
+			"GroupId": "",
+			"Name": "BrowR X"
+		},
+		{
+			"Id": "ParamBrowLAngle",
+			"GroupId": "",
+			"Name": "BrowL Angle"
+		},
+		{
+			"Id": "ParamBrowRAngle",
+			"GroupId": "",
+			"Name": "BrowR Angle"
+		},
+		{
+			"Id": "ParamBrowLForm",
+			"GroupId": "",
+			"Name": "BrowL Form"
+		},
+		{
+			"Id": "ParamBrowRForm",
+			"GroupId": "",
+			"Name": "BrowR Form"
+		},
+		{
+			"Id": "ParamMouthForm",
+			"GroupId": "",
+			"Name": "Mouth Form"
+		},
+		{
+			"Id": "ParamMouthOpenY",
+			"GroupId": "",
+			"Name": "Mouth Open"
+		},
+		{
+			"Id": "Param5",
+			"GroupId": "",
+			"Name": "mouthx"
+		},
+		{
+			"Id": "ParamCheek",
+			"GroupId": "",
+			"Name": "Cheek"
+		},
+		{
+			"Id": "Param6",
+			"GroupId": "",
+			"Name": "limb x"
+		},
+		{
+			"Id": "Param7",
+			"GroupId": "",
+			"Name": "limb y"
+		},
+		{
+			"Id": "Param8",
+			"GroupId": "",
+			"Name": "limb z"
+		},
+		{
+			"Id": "ParamBodyAngleX",
+			"GroupId": "",
+			"Name": "Body X"
+		},
+		{
+			"Id": "ParamBodyAngleY",
+			"GroupId": "",
+			"Name": "Body Y"
+		},
+		{
+			"Id": "ParamBodyAngleZ",
+			"GroupId": "",
+			"Name": "Body Z"
+		},
+		{
+			"Id": "ParamBreath",
+			"GroupId": "",
+			"Name": "Breath"
+		},
+		{
+			"Id": "ParamHairFront",
+			"GroupId": "",
+			"Name": "Hair Move Front"
+		},
+		{
+			"Id": "ParamHairSide",
+			"GroupId": "",
+			"Name": "Hair Move Side"
+		},
+		{
+			"Id": "ParamHairBack",
+			"GroupId": "",
+			"Name": "Hair Move Back"
+		},
+		{
+			"Id": "Param",
+			"GroupId": "",
+			"Name": "jiggle rx"
+		},
+		{
+			"Id": "Param2",
+			"GroupId": "",
+			"Name": "jiggle ry"
+		},
+		{
+			"Id": "Param3",
+			"GroupId": "",
+			"Name": "jiggle lx"
+		},
+		{
+			"Id": "Param4",
+			"GroupId": "",
+			"Name": "jiggle ly"
+		},
+		{
+			"Id": "Param_Angle_Rotation",
+			"GroupId": "ParamGroup",
+			"Name": "[0]worm"
+		},
+		{
+			"Id": "Param_Angle_Rotation2",
+			"GroupId": "ParamGroup",
+			"Name": "[1]worm"
+		},
+		{
+			"Id": "Param_Angle_Rotation3",
+			"GroupId": "ParamGroup",
+			"Name": "[2]worm"
+		},
+		{
+			"Id": "Param_Angle_Rotation4",
+			"GroupId": "ParamGroup2",
+			"Name": "[0]wormtail"
+		},
+		{
+			"Id": "Param_Angle_Rotation5",
+			"GroupId": "ParamGroup2",
+			"Name": "[1]wormtail"
+		},
+		{
+			"Id": "Param_Angle_Rotation6",
+			"GroupId": "ParamGroup3",
+			"Name": "[0]wormtailshadow"
+		},
+		{
+			"Id": "Param_Angle_Rotation7",
+			"GroupId": "ParamGroup3",
+			"Name": "[1]wormtailshadow"
+		},
+		{
+			"Id": "Param_Angle_Rotation11",
+			"GroupId": "ParamGroup4",
+			"Name": "[0]leaf"
+		},
+		{
+			"Id": "Param_Angle_Rotation12",
+			"GroupId": "ParamGroup4",
+			"Name": "[1]leaf"
+		},
+		{
+			"Id": "Param_Angle_Rotation13",
+			"GroupId": "ParamGroup4",
+			"Name": "[2]leaf"
+		},
+		{
+			"Id": "Param_Angle_Rotation14",
+			"GroupId": "ParamGroup4",
+			"Name": "[3]leaf"
+		},
+		{
+			"Id": "Param_Angle_Rotation15",
+			"GroupId": "ParamGroup5",
+			"Name": "[0]leafshadow"
+		},
+		{
+			"Id": "Param_Angle_Rotation16",
+			"GroupId": "ParamGroup5",
+			"Name": "[1]leafshadow"
+		},
+		{
+			"Id": "Param_Angle_Rotation17",
+			"GroupId": "ParamGroup5",
+			"Name": "[2]leafshadow"
+		},
+		{
+			"Id": "Param_Angle_Rotation18",
+			"GroupId": "ParamGroup5",
+			"Name": "[3]leafshadow"
+		},
+		{
+			"Id": "Param_Angle_Rotation8",
+			"GroupId": "ParamGroup6",
+			"Name": "[0]wormshadow"
+		},
+		{
+			"Id": "Param_Angle_Rotation9",
+			"GroupId": "ParamGroup6",
+			"Name": "[1]wormshadow"
+		},
+		{
+			"Id": "Param_Angle_Rotation10",
+			"GroupId": "ParamGroup6",
+			"Name": "[2]wormshadow"
+		}
+	],
+	"ParameterGroups": [
+		{
+			"Id": "ParamGroup",
+			"GroupId": "",
+			"Name": "worm"
+		},
+		{
+			"Id": "ParamGroup2",
+			"GroupId": "",
+			"Name": "wormtail"
+		},
+		{
+			"Id": "ParamGroup3",
+			"GroupId": "",
+			"Name": "wormtailshadow"
+		},
+		{
+			"Id": "ParamGroup4",
+			"GroupId": "",
+			"Name": "leaf"
+		},
+		{
+			"Id": "ParamGroup5",
+			"GroupId": "",
+			"Name": "leafshadow"
+		},
+		{
+			"Id": "ParamGroup6",
+			"GroupId": "",
+			"Name": "wormshadow"
+		}
+	],
+	"Parts": [
+		{
+			"Id": "Part4",
+			"Name": "Папка 1"
+		},
+		{
+			"Id": "Part",
+			"Name": "Папка 4"
+		},
+		{
+			"Id": "ArtMesh17_Skinning",
+			"Name": "Слой 9(Skinning)"
+		},
+		{
+			"Id": "Part2",
+			"Name": "Папка 3"
+		},
+		{
+			"Id": "ArtMesh11_Skinning",
+			"Name": "Слой 15(Skinning)"
+		},
+		{
+			"Id": "ArtMesh12_Skinning",
+			"Name": "Слой 14(Skinning)"
+		},
+		{
+			"Id": "ArtMesh13_Skinning",
+			"Name": "Слой 13(Skinning)"
+		},
+		{
+			"Id": "ArtMesh14_Skinning",
+			"Name": "Слой 12(Skinning)"
+		},
+		{
+			"Id": "ArtMesh15_Skinning",
+			"Name": "Слой 11(Skinning)"
+		},
+		{
+			"Id": "ArtMesh16_Skinning",
+			"Name": "Слой 10(Skinning)"
+		},
+		{
+			"Id": "Part3",
+			"Name": "Папка 2"
+		},
+		{
+			"Id": "ArtMesh18_Skinning",
+			"Name": "Слой 8(Skinning)"
+		}
+	],
+	"CombinedParameters": [
+		[
+			"ParamAngleX",
+			"ParamAngleY"
+		],
+		[
+			"ParamMouthForm",
+			"ParamMouthOpenY"
+		],
+		[
+			"Param6",
+			"Param7"
+		],
+		[
+			"ParamBodyAngleX",
+			"ParamBodyAngleY"
+		]
+	]
+}

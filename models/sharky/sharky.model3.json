@@ -1,0 +1,27 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "sharky.moc3",
+		"Textures": [
+			"sharky.1024/texture_00.png",
+			"sharky.1024/texture_01.png",
+			"sharky.1024/texture_02.png",
+			"sharky.1024/texture_03.png",
+			"sharky.1024/texture_04.png"
+		],
+		"Physics": "sharky.physics3.json",
+		"DisplayInfo": "sharky.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		}
+	]
+}

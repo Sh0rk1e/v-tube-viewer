@@ -1,0 +1,28 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "skelespid.moc3",
+		"Textures": [
+			"skelespid.1024/texture_00.png",
+			"skelespid.1024/texture_01.png",
+			"skelespid.1024/texture_02.png",
+			"skelespid.1024/texture_03.png",
+			"skelespid.1024/texture_04.png",
+			"skelespid.1024/texture_05.png"
+		],
+		"Physics": "skelespid.physics3.json",
+		"DisplayInfo": "skelespid.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		}
+	]
+}

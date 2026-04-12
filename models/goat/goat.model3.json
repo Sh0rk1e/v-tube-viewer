@@ -1,0 +1,27 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "goat.moc3",
+		"Textures": [
+			"goat.1024/texture_00.png",
+			"goat.1024/texture_01.png",
+			"goat.1024/texture_02.png",
+			"goat.1024/texture_03.png",
+			"goat.1024/texture_04.png",
+			"goat.1024/texture_05.png"
+		],
+		"DisplayInfo": "goat.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		}
+	]
+}

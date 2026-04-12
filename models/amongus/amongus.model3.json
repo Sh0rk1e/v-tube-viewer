@@ -1,0 +1,31 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "Amongus.moc3",
+		"Textures": [
+			"Amongus.1024/texture_00.png",
+			"Amongus.1024/texture_01.png"
+		],
+		"Physics": "Amongus.physics3.json",
+		"DisplayInfo": "Amongus.cdi3.json",
+		"Expressions": [
+			{
+				"Name": "ded",
+				"File": "ded.exp3.json"
+			}
+		]
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		}
+	],
+	"HitAreas": []
+}

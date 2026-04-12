@@ -8,5 +8,6 @@ vendor/live2dcubismcore.min.js
 
 CubismSdkForWeb-*/
 
-models/*
-!models/.gitkeep
+models/**/*.psd
+models/**/*.cmo3
+models/PNGTubeRemix(Windows)/

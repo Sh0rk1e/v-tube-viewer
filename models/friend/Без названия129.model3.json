@@ -1,0 +1,17 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "Без названия129.moc3",
+		"Textures": [
+			"Без названия129.1024/texture_00.png"
+		],
+		"DisplayInfo": "Без названия129.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		}
+	]
+}

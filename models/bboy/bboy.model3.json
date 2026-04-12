@@ -1,0 +1,27 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "bboy.moc3",
+		"Textures": [
+			"bboy.1024/texture_00.png",
+			"bboy.1024/texture_01.png",
+			"bboy.1024/texture_02.png",
+			"bboy.1024/texture_03.png",
+			"bboy.1024/texture_04.png"
+		],
+		"Physics": "bboy.physics3.json",
+		"DisplayInfo": "bboy.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		}
+	]
+}

@@ -1,0 +1,282 @@
+{
+	"Version": 3,
+	"Parameters": [
+		{
+			"Id": "Param4",
+			"GroupId": "ParamGroup",
+			"Name": "hairx1"
+		},
+		{
+			"Id": "Param5",
+			"GroupId": "ParamGroup",
+			"Name": "hairx2"
+		},
+		{
+			"Id": "Param6",
+			"GroupId": "ParamGroup",
+			"Name": "hairx3"
+		},
+		{
+			"Id": "Param7",
+			"GroupId": "ParamGroup",
+			"Name": "hairy1"
+		},
+		{
+			"Id": "Param8",
+			"GroupId": "ParamGroup",
+			"Name": "hairy2"
+		},
+		{
+			"Id": "Param10",
+			"GroupId": "ParamGroup2",
+			"Name": "hands physiksx1"
+		},
+		{
+			"Id": "Param11",
+			"GroupId": "ParamGroup2",
+			"Name": "hands physiksx2"
+		},
+		{
+			"Id": "Param12",
+			"GroupId": "ParamGroup2",
+			"Name": "hands physiksy1"
+		},
+		{
+			"Id": "Param16",
+			"GroupId": "ParamGroup2",
+			"Name": "hand yturn"
+		},
+		{
+			"Id": "Param13",
+			"GroupId": "ParamGroup2",
+			"Name": "hands physiksy2"
+		},
+		{
+			"Id": "Param14",
+			"GroupId": "ParamGroup3",
+			"Name": "hoodx"
+		},
+		{
+			"Id": "Param15",
+			"GroupId": "ParamGroup3",
+			"Name": "hoody"
+		},
+		{
+			"Id": "Param17",
+			"GroupId": "ParamGroup3",
+			"Name": "hoodyopen"
+		},
+		{
+			"Id": "ParamAngleX",
+			"GroupId": "",
+			"Name": "Angle X"
+		},
+		{
+			"Id": "ParamAngleY",
+			"GroupId": "",
+			"Name": "Angle Y"
+		},
+		{
+			"Id": "ParamAngleZ",
+			"GroupId": "",
+			"Name": "Angle Z"
+		},
+		{
+			"Id": "Param9",
+			"GroupId": "",
+			"Name": "hoody"
+		},
+		{
+			"Id": "ParamEyeLOpen",
+			"GroupId": "",
+			"Name": "EyeL Open"
+		},
+		{
+			"Id": "ParamEyeLSmile",
+			"GroupId": "",
+			"Name": "EyeL Smile"
+		},
+		{
+			"Id": "ParamEyeROpen",
+			"GroupId": "",
+			"Name": "EyeR Open"
+		},
+		{
+			"Id": "ParamEyeRSmile",
+			"GroupId": "",
+			"Name": "EyeR Smile"
+		},
+		{
+			"Id": "ParamEyeBallX",
+			"GroupId": "",
+			"Name": "Eyeball X"
+		},
+		{
+			"Id": "ParamEyeBallY",
+			"GroupId": "",
+			"Name": "Eyeball Y"
+		},
+		{
+			"Id": "ParamBrowLY",
+			"GroupId": "",
+			"Name": "BrowL Y"
+		},
+		{
+			"Id": "ParamBrowRY",
+			"GroupId": "",
+			"Name": "BrowR Y"
+		},
+		{
+			"Id": "ParamBrowLX",
+			"GroupId": "",
+			"Name": "BrowL X"
+		},
+		{
+			"Id": "ParamBrowRX",
+			"GroupId": "",
+			"Name": "BrowR X"
+		},
+		{
+			"Id": "ParamBrowLAngle",
+			"GroupId": "",
+			"Name": "BrowL Angle"
+		},
+		{
+			"Id": "ParamBrowRAngle",
+			"GroupId": "",
+			"Name": "BrowR Angle"
+		},
+		{
+			"Id": "ParamBrowLForm",
+			"GroupId": "",
+			"Name": "BrowL Form"
+		},
+		{
+			"Id": "ParamBrowRForm",
+			"GroupId": "",
+			"Name": "BrowR Form"
+		},
+		{
+			"Id": "ParamMouthForm",
+			"GroupId": "",
+			"Name": "Mouth Form"
+		},
+		{
+			"Id": "ParamMouthOpenY",
+			"GroupId": "",
+			"Name": "Mouth Open"
+		},
+		{
+			"Id": "Param",
+			"GroupId": "",
+			"Name": "mouthx"
+		},
+		{
+			"Id": "Param2",
+			"GroupId": "",
+			"Name": "eye r jiggle"
+		},
+		{
+			"Id": "Param3",
+			"GroupId": "",
+			"Name": "eye l jiggle"
+		},
+		{
+			"Id": "ParamCheek",
+			"GroupId": "",
+			"Name": "Cheek"
+		},
+		{
+			"Id": "ParamBodyAngleX",
+			"GroupId": "",
+			"Name": "Body X"
+		},
+		{
+			"Id": "ParamBodyAngleY",
+			"GroupId": "",
+			"Name": "Body Y"
+		},
+		{
+			"Id": "ParamBodyAngleZ",
+			"GroupId": "",
+			"Name": "Body Z"
+		},
+		{
+			"Id": "ParamBreath",
+			"GroupId": "",
+			"Name": "Breath"
+		},
+		{
+			"Id": "ParamHairFront",
+			"GroupId": "",
+			"Name": "Hair Move Front"
+		},
+		{
+			"Id": "ParamHairSide",
+			"GroupId": "",
+			"Name": "Hair Move Side"
+		},
+		{
+			"Id": "ParamHairBack",
+			"GroupId": "",
+			"Name": "Hair Move Back"
+		}
+	],
+	"ParameterGroups": [
+		{
+			"Id": "ParamGroup",
+			"GroupId": "",
+			"Name": "hair physics"
+		},
+		{
+			"Id": "ParamGroup2",
+			"GroupId": "",
+			"Name": "hands phys"
+		},
+		{
+			"Id": "ParamGroup3",
+			"GroupId": "",
+			"Name": "physhoodie"
+		}
+	],
+	"Parts": [
+		{
+			"Id": "Part",
+			"Name": "Папка 7"
+		},
+		{
+			"Id": "Part2",
+			"Name": "Папка 6"
+		},
+		{
+			"Id": "Part3",
+			"Name": "Папка 5"
+		},
+		{
+			"Id": "Part4",
+			"Name": "Папка 4"
+		},
+		{
+			"Id": "Part5",
+			"Name": "Папка 3"
+		},
+		{
+			"Id": "Part6",
+			"Name": "Папка 2"
+		},
+		{
+			"Id": "Part7",
+			"Name": "Папка 1"
+		}
+	],
+	"CombinedParameters": [
+		[
+			"ParamEyeBallX",
+			"ParamEyeBallY"
+		],
+		[
+			"ParamMouthForm",
+			"ParamMouthOpenY"
+		]
+	]
+}
