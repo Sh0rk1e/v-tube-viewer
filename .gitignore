@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+vendor/live2dcubismcore.js
+vendor/live2dcubismcore.min.js
+
+CubismSdkForWeb-*/
+
+models/*
+!models/.gitkeep

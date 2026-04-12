@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VT Mini Studio</title>
+  <link rel="stylesheet" href="./styles.css?v=3">
+</head>
+<body>
+  <main class="stage">
+    <div id="viewer-host" class="viewer-host"></div>
+    <button id="prev-model" class="model-arrow model-arrow--left" type="button" aria-label="Previous model">&#8249;</button>
+    <button id="next-model" class="model-arrow model-arrow--right" type="button" aria-label="Next model">&#8250;</button>
+    <aside id="param-panel" class="param-panel">
+      <div class="param-panel__header">
+        <div>
+          <h2>Parameters</h2>
+          <p id="model-name" class="model-name"></p>
+        </div>
+        <button id="reset-params" type="button">Reset</button>
+      </div>
+      <div class="tracking-bar">
+        <button id="toggle-tracking" type="button">Start Face Tracking</button>
+        <span id="tracking-status" class="tracking-status">Off</span>
+      </div>
+      <video id="tracking-video" class="tracking-video" autoplay playsinline muted hidden></video>
+      <input id="param-search" class="param-search" type="search" placeholder="Search parameter id">
+      <div id="param-list" class="param-list"></div>
+    </aside>
+  </main>
+
+  <script src="https://unpkg.com/oh-my-live2d@latest"></script>
+  <script src="./app.js?v=5"></script>
+</body>
+</html>
