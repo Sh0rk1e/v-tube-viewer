@@ -1,21 +1,15 @@
 {
   "models": [
-    "models/akari_vts/akari.model3.json",
     "models/amongus/amongus.model3.json",
     "models/apple/apple.model3.json",
     "models/bboy/bboy.model3.json",
     "models/friend/%D0%91%D0%B5%D0%B7%20%D0%BD%D0%B0%D0%B7%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F129.model3.json",
     "models/goat/goat.model3.json",
-    "models/hijiki_vts/hijiki.model3.json",
-    "models/hiyori_vts/hiyori.model3.json",
     "models/Jelly/jelly%20.model3.json",
-    "models/me_redraw/me_redraw.model3.json",
     "models/moth/moth.model3.json",
     "models/New_/new/new.model3.json",
     "models/shark/shark.model3.json",
     "models/sharky/sharky.model3.json",
-    "models/skelespidy/skelespid.model3.json",
-    "models/tororo_vts/tororo.model3.json",
-    "models/wanko_vts/wanko.model3.json"
+    "models/skelespidy/skelespid.model3.json"
   ]
 }
