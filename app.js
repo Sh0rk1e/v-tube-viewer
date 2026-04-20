@@ -4,6 +4,7 @@
   const nextModelButton = document.getElementById("next-model");
   const modelName = document.getElementById("model-name");
   const toggleTrackingButton = document.getElementById("toggle-tracking");
+  const calibrateTrackingButton = document.getElementById("calibrate-tracking");
   const trackingStatus = document.getElementById("tracking-status");
   const trackingVideo = document.getElementById("tracking-video");
   const paramSearch = document.getElementById("param-search");
@@ -35,6 +36,39 @@
   let trackingLoopId = 0;
   let lastTrackingVideoTime = -1;
   let visionModulePromise = null;
+  let trackingPoseNeutral = {
+    yaw: 0,
+    pitch: 0,
+    roll: 0
+  };
+  let trackingRawState = {
+    yaw: 0,
+    pitch: 0,
+    roll: 0,
+    eyeOpenLeft: 1,
+    eyeOpenRight: 1,
+    mouthOpen: 0,
+    mouthSmile: 0,
+    browLeft: 0,
+    browRight: 0,
+    eyeBallX: 0,
+    eyeBallY: 0,
+    cheek: 0
+  };
+  let trackingSmoothedState = {
+    yaw: 0,
+    pitch: 0,
+    roll: 0,
+    eyeOpenLeft: 1,
+    eyeOpenRight: 1,
+    mouthOpen: 0,
+    mouthSmile: 0,
+    browLeft: 0,
+    browRight: 0,
+    eyeBallX: 0,
+    eyeBallY: 0,
+    cheek: 0
+  };
 
   if (currentModelIndex < 0) {
     currentModelIndex = 0;
@@ -46,6 +80,29 @@
 
   function getLive2DModel() {
     return isModelReady() ? viewerInstance.models.model : null;
+  }
+
+  function disableMouseFollow() {
+    const live2DModel = getLive2DModel();
+    if (!live2DModel) {
+      return;
+    }
+
+    try {
+      if (typeof live2DModel.focus === "function") {
+        live2DModel.focus(0, 0, true);
+      }
+
+      if (
+        live2DModel.internalModel &&
+        live2DModel.internalModel.focusController &&
+        typeof live2DModel.internalModel.focusController.focus === "function"
+      ) {
+        live2DModel.internalModel.focusController.focus(0, 0, true);
+      }
+    } catch (error) {
+      console.warn("Could not neutralize cursor follow.", error);
+    }
   }
 
   function getCoreModel() {
@@ -76,6 +133,10 @@
     }
 
     try {
+      if (trackingActive) {
+        disableMouseFollow();
+      }
+
       viewerInstance.setModelPosition({
         x: defaultState.x,
         y: defaultState.y
@@ -101,6 +162,15 @@
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
+  }
+
+  function lerp(current, target, amount) {
+    return current + (target - current) * amount;
+  }
+
+  function smoothTrackingValue(key, target, amount) {
+    trackingSmoothedState[key] = lerp(trackingSmoothedState[key], target, amount);
+    return trackingSmoothedState[key];
   }
 
   function getParameterSnapshot() {
@@ -203,6 +273,10 @@
       return;
     }
 
+    if (trackingActive) {
+      disableMouseFollow();
+    }
+
     parameterDefinitions.forEach((parameter) => {
       const hasManual = parameterOverrides.has(parameter.id);
       const hasTracking = trackingOverrides.has(parameter.id);
@@ -230,6 +304,8 @@
       } else if (typeof coreModel.setParameterValueById === "function") {
         coreModel.setParameterValueById(parameter.id, value, 1);
       }
+
+      parameter.actualValue = value;
     });
   }
 
@@ -281,6 +357,9 @@
       number.value = clampedValue.toFixed(2);
       parameter.value = clampedValue;
       setParameterValue(parameter, clampedValue);
+      if (parameter.liveValueElement) {
+        parameter.liveValueElement.textContent = `Target: ${clampedValue.toFixed(3)} | Live: ${clampedValue.toFixed(3)}`;
+      }
     }
 
     function markEditing(isEditing) {
@@ -427,6 +506,20 @@
     trackingOverrides.set(parameter.id, clamp(value, min, max));
   }
 
+  function calibrateTrackingNeutral() {
+    trackingPoseNeutral = {
+      yaw: trackingRawState.yaw,
+      pitch: trackingRawState.pitch,
+      roll: trackingRawState.roll
+    };
+    updateTrackingStatus("Calibrated");
+    window.setTimeout(() => {
+      if (trackingActive) {
+        updateTrackingStatus("On");
+      }
+    }, 1200);
+  }
+
   function getBlendshapeScore(categories, name) {
     const category = categories.find((item) => item.categoryName === name);
     return category ? category.score : 0;
@@ -460,17 +553,70 @@
     const eyeOpenLeft = 1 - getBlendshapeScore(categories, "eyeBlinkLeft");
     const eyeOpenRight = 1 - getBlendshapeScore(categories, "eyeBlinkRight");
     const mouthOpen = getBlendshapeScore(categories, "jawOpen");
+    const mouthSmile = (
+      getBlendshapeScore(categories, "mouthSmileLeft") +
+      getBlendshapeScore(categories, "mouthSmileRight")
+    ) / 2;
+    const browOuterUpLeft = getBlendshapeScore(categories, "browOuterUpLeft");
+    const browOuterUpRight = getBlendshapeScore(categories, "browOuterUpRight");
+    const browDownLeft = getBlendshapeScore(categories, "browDownLeft");
+    const browDownRight = getBlendshapeScore(categories, "browDownRight");
+    const cheek = (
+      getBlendshapeScore(categories, "cheekSquintLeft") +
+      getBlendshapeScore(categories, "cheekSquintRight")
+    ) / 2;
+
+    trackingRawState = {
+      yaw,
+      pitch,
+      roll,
+      eyeOpenLeft,
+      eyeOpenRight,
+      mouthOpen,
+      mouthSmile,
+      browLeft: browOuterUpLeft - browDownLeft,
+      browRight: browOuterUpRight - browDownRight,
+      eyeBallX: clamp(yaw / 30, -1, 1),
+      eyeBallY: clamp(pitch / 30, -1, 1),
+      cheek
+    };
+
+    const correctedYaw = trackingRawState.yaw - trackingPoseNeutral.yaw;
+    const correctedPitch = trackingRawState.pitch - trackingPoseNeutral.pitch;
+    const correctedRoll = trackingRawState.roll - trackingPoseNeutral.roll;
+    const smoothYaw = smoothTrackingValue("yaw", correctedYaw, 0.18);
+    const smoothPitch = smoothTrackingValue("pitch", correctedPitch, 0.16);
+    const smoothRoll = smoothTrackingValue("roll", correctedRoll, 0.2);
+    const smoothEyeLeft = smoothTrackingValue("eyeOpenLeft", trackingRawState.eyeOpenLeft, 0.4);
+    const smoothEyeRight = smoothTrackingValue("eyeOpenRight", trackingRawState.eyeOpenRight, 0.4);
+    const smoothMouthOpen = smoothTrackingValue("mouthOpen", trackingRawState.mouthOpen, 0.3);
+    const smoothMouthSmile = smoothTrackingValue("mouthSmile", trackingRawState.mouthSmile, 0.2);
+    const smoothBrowLeft = smoothTrackingValue("browLeft", trackingRawState.browLeft, 0.2);
+    const smoothBrowRight = smoothTrackingValue("browRight", trackingRawState.browRight, 0.2);
+    const smoothEyeBallX = smoothTrackingValue("eyeBallX", trackingRawState.eyeBallX, 0.22);
+    const smoothEyeBallY = smoothTrackingValue("eyeBallY", trackingRawState.eyeBallY, 0.22);
+    const smoothCheek = smoothTrackingValue("cheek", trackingRawState.cheek, 0.2);
 
     trackingOverrides.clear();
-    setTrackingParameter(["ParamAngleX", "anglex", "x"], yaw, -30, 30);
-    setTrackingParameter(["ParamAngleY", "angley", "y"], pitch, -30, 30);
-    setTrackingParameter(["ParamAngleZ", "anglez", "z"], roll, -30, 30);
-    setTrackingParameter(["ParamBodyAngleX"], yaw * 0.35, -10, 10);
-    setTrackingParameter(["ParamBodyAngleY"], pitch * 0.25, -10, 10);
-    setTrackingParameter(["ParamBodyAngleZ"], roll * 0.3, -10, 10);
-    setTrackingParameter(["ParamEyeLOpen"], eyeOpenLeft, 0, 1);
-    setTrackingParameter(["ParamEyeROpen"], eyeOpenRight, 0, 1);
-    setTrackingParameter(["ParamMouthOpenY"], mouthOpen, 0, 1);
+    setTrackingParameter(["ParamAngleX", "anglex", "x"], smoothYaw, -30, 30);
+    setTrackingParameter(["ParamAngleY", "angley", "y"], smoothPitch, -30, 30);
+    setTrackingParameter(["ParamAngleZ", "anglez", "z"], smoothRoll, -30, 30);
+    setTrackingParameter(["ParamEyeBallX"], smoothEyeBallX, -1, 1);
+    setTrackingParameter(["ParamEyeBallY"], smoothEyeBallY, -1, 1);
+    setTrackingParameter(["ParamBodyAngleX"], smoothYaw * 0.42, -15, 15);
+    setTrackingParameter(["ParamBodyAngleY"], smoothPitch * 0.28, -10, 10);
+    setTrackingParameter(["ParamBodyAngleZ"], smoothRoll * 0.38, -15, 15);
+    setTrackingParameter(["ParamEyeLOpen"], smoothEyeLeft, 0, 1);
+    setTrackingParameter(["ParamEyeROpen"], smoothEyeRight, 0, 1);
+    setTrackingParameter(["ParamMouthOpenY"], smoothMouthOpen, 0, 1);
+    setTrackingParameter(["ParamMouthForm"], smoothMouthSmile * 2 - 1, -1, 1);
+    setTrackingParameter(["ParamBrowLY"], smoothBrowLeft, -1, 1);
+    setTrackingParameter(["ParamBrowRY"], smoothBrowRight, -1, 1);
+    setTrackingParameter(["ParamBrowLX"], smoothYaw / 20, -1, 1);
+    setTrackingParameter(["ParamBrowRX"], smoothYaw / 20, -1, 1);
+    setTrackingParameter(["ParamCheek"], smoothCheek, 0, 1);
+    setTrackingParameter(["ParamEyeLSmile"], smoothMouthSmile, 0, 1);
+    setTrackingParameter(["ParamEyeRSmile"], smoothMouthSmile, 0, 1);
   }
 
   async function createTrackingLandmarker() {
@@ -552,7 +698,14 @@
       await createTrackingLandmarker();
       trackingActive = true;
       lastTrackingVideoTime = -1;
+      trackingPoseNeutral = {
+        yaw: trackingRawState.yaw,
+        pitch: trackingRawState.pitch,
+        roll: trackingRawState.roll
+      };
+      disableMouseFollow();
       toggleTrackingButton.textContent = "Stop Face Tracking";
+      calibrateTrackingButton.disabled = false;
       updateTrackingStatus("On");
       trackingLoop();
     } catch (error) {
@@ -573,6 +726,7 @@
     trackingVideo.srcObject = null;
     trackingVideo.hidden = true;
     toggleTrackingButton.textContent = "Start Face Tracking";
+    calibrateTrackingButton.disabled = true;
     updateTrackingStatus("Off");
   }
 
@@ -726,6 +880,10 @@
     toggleTrackingButton.addEventListener("click", () => {
       toggleFaceTracking();
     });
+    calibrateTrackingButton.addEventListener("click", () => {
+      calibrateTrackingNeutral();
+    });
+    calibrateTrackingButton.disabled = true;
     paramSearch.addEventListener("input", filterParameterPanel);
     resetParamsButton.addEventListener("click", resetParameterOverrides);
     ensureAnimationLoop();

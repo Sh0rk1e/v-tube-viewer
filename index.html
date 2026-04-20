@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VT Mini Studio</title>
-  <link rel="stylesheet" href="./styles.css?v=3">
+  <link rel="stylesheet" href="./styles.css?v=4">
 </head>
 <body>
   <main class="stage">
@@ -21,6 +21,7 @@
       </div>
       <div class="tracking-bar">
         <button id="toggle-tracking" type="button">Start Face Tracking</button>
+        <button id="calibrate-tracking" type="button">Calibrate</button>
         <span id="tracking-status" class="tracking-status">Off</span>
       </div>
       <video id="tracking-video" class="tracking-video" autoplay playsinline muted hidden></video>
@@ -30,6 +31,6 @@
   </main>
 
   <script src="https://unpkg.com/oh-my-live2d@latest"></script>
-  <script src="./app.js?v=5"></script>
+  <script src="./app.js?v=6"></script>
 </body>
 </html>

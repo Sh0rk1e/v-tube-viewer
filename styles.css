@@ -135,6 +135,11 @@ body {
   cursor: pointer;
 }
 
+.tracking-bar button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .tracking-status {
   color: #9ce8be;
   font: 600 0.8rem/1.2 "Segoe UI", Tahoma, sans-serif;
