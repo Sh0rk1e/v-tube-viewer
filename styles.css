@@ -206,6 +206,39 @@ body {
   color: #f4f7fb;
 }
 
+.param-mapping {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.param-mapping__title {
+  margin: 0;
+  color: rgba(244, 247, 251, 0.72);
+  font: 600 0.72rem/1.2 "Segoe UI", Tahoma, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.param-mapping__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) 70px 70px;
+  gap: 8px;
+}
+
+.param-mapping select,
+.param-mapping input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f4f7fb;
+}
+
 .param-empty {
   margin: 0;
   color: rgba(244, 247, 251, 0.72);

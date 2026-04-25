@@ -12,6 +12,39 @@
   const resetParamsButton = document.getElementById("reset-params");
   const appBaseUrl = new URL("./", window.location.href);
   const manifestUrl = new URL("models/models.json", appBaseUrl);
+  const trackingSourceOptions = [
+    { key: "", label: "None", min: 0, max: 0 },
+    { key: "yaw", label: "Head Yaw", min: -30, max: 30 },
+    { key: "pitch", label: "Head Pitch", min: -30, max: 30 },
+    { key: "roll", label: "Head Roll", min: -30, max: 30 },
+    { key: "bodyYaw", label: "Body Yaw", min: -15, max: 15 },
+    { key: "bodyPitch", label: "Body Pitch", min: -10, max: 10 },
+    { key: "bodyRoll", label: "Body Roll", min: -15, max: 15 },
+    { key: "eyeOpenLeft", label: "Eye Open Left", min: 0, max: 1 },
+    { key: "eyeOpenRight", label: "Eye Open Right", min: 0, max: 1 },
+    { key: "eyeSquintLeft", label: "Eye Squint Left", min: 0, max: 1 },
+    { key: "eyeSquintRight", label: "Eye Squint Right", min: 0, max: 1 },
+    { key: "eyeWideLeft", label: "Eye Wide Left", min: 0, max: 1 },
+    { key: "eyeWideRight", label: "Eye Wide Right", min: 0, max: 1 },
+    { key: "eyeBallX", label: "Eye Ball X", min: -1, max: 1 },
+    { key: "eyeBallY", label: "Eye Ball Y", min: -1, max: 1 },
+    { key: "mouthOpen", label: "Mouth Open", min: 0, max: 1.35 },
+    { key: "mouthX", label: "Mouth X", min: -1.2, max: 1.2 },
+    { key: "mouthSmile", label: "Mouth Smile", min: 0, max: 1 },
+    { key: "mouthSmileLeft", label: "Mouth Smile Left", min: 0, max: 1 },
+    { key: "mouthSmileRight", label: "Mouth Smile Right", min: 0, max: 1 },
+    { key: "mouthFunnel", label: "Mouth Funnel", min: 0, max: 1 },
+    { key: "mouthPucker", label: "Mouth Pucker", min: 0, max: 1 },
+    { key: "mouthShrugUpper", label: "Mouth Shrug Upper", min: 0, max: 1 },
+    { key: "mouthShrugLower", label: "Mouth Shrug Lower", min: 0, max: 1 },
+    { key: "jawX", label: "Jaw X", min: -1.1, max: 1.1 },
+    { key: "browLeft", label: "Brow Left", min: -1, max: 1 },
+    { key: "browRight", label: "Brow Right", min: -1, max: 1 },
+    { key: "browInnerUp", label: "Brow Inner Up", min: 0, max: 1 },
+    { key: "cheek", label: "Cheek", min: 0, max: 1 }
+  ];
+  const trackingSourceMap = new Map(trackingSourceOptions.map((source) => [source.key, source]));
+  const mappingStoragePrefix = "vt-mini-studio:mapping:";
   let modelPaths = [
     "models/amongus/amongus.model3.json"
   ];
@@ -36,6 +69,7 @@
   let trackingLoopId = 0;
   let lastTrackingVideoTime = -1;
   let visionModulePromise = null;
+  let currentTrackingSignals = {};
   let trackingPoseNeutral = {
     yaw: 0,
     pitch: 0,
@@ -47,10 +81,23 @@
     roll: 0,
     eyeOpenLeft: 1,
     eyeOpenRight: 1,
+    eyeSquintLeft: 0,
+    eyeSquintRight: 0,
+    eyeWideLeft: 0,
+    eyeWideRight: 0,
     mouthOpen: 0,
+    mouthX: 0,
     mouthSmile: 0,
+    mouthSmileLeft: 0,
+    mouthSmileRight: 0,
+    mouthFunnel: 0,
+    mouthPucker: 0,
+    mouthShrugUpper: 0,
+    mouthShrugLower: 0,
+    jawX: 0,
     browLeft: 0,
     browRight: 0,
+    browInnerUp: 0,
     eyeBallX: 0,
     eyeBallY: 0,
     cheek: 0
@@ -61,10 +108,23 @@
     roll: 0,
     eyeOpenLeft: 1,
     eyeOpenRight: 1,
+    eyeSquintLeft: 0,
+    eyeSquintRight: 0,
+    eyeWideLeft: 0,
+    eyeWideRight: 0,
     mouthOpen: 0,
+    mouthX: 0,
     mouthSmile: 0,
+    mouthSmileLeft: 0,
+    mouthSmileRight: 0,
+    mouthFunnel: 0,
+    mouthPucker: 0,
+    mouthShrugUpper: 0,
+    mouthShrugLower: 0,
+    jawX: 0,
     browLeft: 0,
     browRight: 0,
+    browInnerUp: 0,
     eyeBallX: 0,
     eyeBallY: 0,
     cheek: 0
@@ -168,8 +228,29 @@
     return current + (target - current) * amount;
   }
 
-  function smoothTrackingValue(key, target, amount) {
-    trackingSmoothedState[key] = lerp(trackingSmoothedState[key], target, amount);
+  function smoothTrackingValue(key, target, config) {
+    const current = trackingSmoothedState[key] ?? target;
+    const delta = Math.abs(target - current);
+    const settings =
+      typeof config === "number"
+        ? {
+            rise: config,
+            fall: config,
+            boost: config * 0.7,
+            min: Math.min(config, 0.12),
+            max: 0.82
+          }
+        : {
+            rise: config.rise,
+            fall: config.fall,
+            boost: config.boost ?? 0.2,
+            min: config.min ?? 0.08,
+            max: config.max ?? 0.82
+          };
+
+    const baseAmount = target > current ? settings.rise : settings.fall;
+    const amount = clamp(baseAmount + delta * settings.boost, settings.min, settings.max);
+    trackingSmoothedState[key] = lerp(current, target, amount);
     return trackingSmoothedState[key];
   }
 
@@ -204,6 +285,58 @@
 
   function getCurrentModelPath() {
     return modelPaths[currentModelIndex];
+  }
+
+  function getCurrentMappingStorageKey() {
+    return `${mappingStoragePrefix}${getCurrentModelPath() || "default"}`;
+  }
+
+  function loadStoredTrackingBindings() {
+    try {
+      const raw = window.localStorage.getItem(getCurrentMappingStorageKey());
+      if (!raw) {
+        return {};
+      }
+
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (error) {
+      console.warn("Could not load saved tracking mappings.", error);
+      return {};
+    }
+  }
+
+  function saveStoredTrackingBindings() {
+    const payload = {};
+    parameterDefinitions.forEach((parameter) => {
+      if (!parameter.trackingBinding || !parameter.trackingBinding.source) {
+        return;
+      }
+
+      payload[parameter.id] = {
+        source: parameter.trackingBinding.source,
+        strength: parameter.trackingBinding.strength,
+        offset: parameter.trackingBinding.offset
+      };
+    });
+
+    try {
+      window.localStorage.setItem(getCurrentMappingStorageKey(), JSON.stringify(payload));
+    } catch (error) {
+      console.warn("Could not save tracking mappings.", error);
+    }
+  }
+
+  function applyStoredTrackingBindings(parameters) {
+    const storedBindings = loadStoredTrackingBindings();
+    parameters.forEach((parameter) => {
+      const saved = storedBindings[parameter.id];
+      parameter.trackingBinding = {
+        source: saved && trackingSourceMap.has(saved.source) ? saved.source : "",
+        strength: saved && Number.isFinite(saved.strength) ? saved.strength : 1,
+        offset: saved && Number.isFinite(saved.offset) ? saved.offset : 0
+      };
+    });
   }
 
   async function loadModelManifest() {
@@ -351,6 +484,39 @@
     number.step = "0.01";
     number.value = parameter.value.toFixed(2);
 
+    const mapping = document.createElement("div");
+    mapping.className = "param-mapping";
+
+    const mappingTitle = document.createElement("p");
+    mappingTitle.className = "param-mapping__title";
+    mappingTitle.textContent = "Tracking map";
+
+    const mappingGrid = document.createElement("div");
+    mappingGrid.className = "param-mapping__grid";
+
+    const sourceSelect = document.createElement("select");
+    trackingSourceOptions.forEach((option) => {
+      const selectOption = document.createElement("option");
+      selectOption.value = option.key;
+      selectOption.textContent = option.label;
+      sourceSelect.append(selectOption);
+    });
+    sourceSelect.value = parameter.trackingBinding ? parameter.trackingBinding.source : "";
+
+    const strengthInput = document.createElement("input");
+    strengthInput.type = "number";
+    strengthInput.step = "0.1";
+    strengthInput.title = "Tracking strength";
+    strengthInput.placeholder = "Gain";
+    strengthInput.value = String(parameter.trackingBinding ? parameter.trackingBinding.strength : 1);
+
+    const offsetInput = document.createElement("input");
+    offsetInput.type = "number";
+    offsetInput.step = "0.1";
+    offsetInput.title = "Tracking offset";
+    offsetInput.placeholder = "Offset";
+    offsetInput.value = String(parameter.trackingBinding ? parameter.trackingBinding.offset : 0);
+
     function syncInputs(nextValue) {
       const clampedValue = clamp(nextValue, parameter.min, parameter.max);
       range.value = String(clampedValue);
@@ -379,12 +545,33 @@
     number.addEventListener("focus", () => markEditing(true));
     number.addEventListener("blur", () => markEditing(false));
 
+    function syncTrackingBinding() {
+      parameter.trackingBinding = {
+        source: sourceSelect.value,
+        strength: Number.isFinite(Number(strengthInput.value)) ? Number(strengthInput.value) : 1,
+        offset: Number.isFinite(Number(offsetInput.value)) ? Number(offsetInput.value) : 0
+      };
+      saveStoredTrackingBindings();
+      if (trackingActive) {
+        applyTrackingMappings(currentTrackingSignals);
+      }
+    }
+
+    sourceSelect.addEventListener("change", syncTrackingBinding);
+    strengthInput.addEventListener("input", syncTrackingBinding);
+    offsetInput.addEventListener("input", syncTrackingBinding);
+
     controls.append(range, number);
-    item.append(title, meta, live, controls);
+    mappingGrid.append(sourceSelect, strengthInput, offsetInput);
+    mapping.append(mappingTitle, mappingGrid);
+    item.append(title, meta, live, controls, mapping);
     parameter.element = item;
     parameter.liveValueElement = live;
     parameter.rangeInput = range;
     parameter.numberInput = number;
+    parameter.mappingSourceInput = sourceSelect;
+    parameter.mappingStrengthInput = strengthInput;
+    parameter.mappingOffsetInput = offsetInput;
     return item;
   }
 
@@ -412,6 +599,7 @@
 
     if (!parameterDefinitions.length) {
       parameterDefinitions = snapshot;
+      applyStoredTrackingBindings(parameterDefinitions);
       renderParameterPanel(parameterDefinitions);
       return;
     }
@@ -490,6 +678,55 @@
     mountViewer();
   }
 
+  function mapTrackingValueToParameter(parameter, sourceKey, sourceValue, strength, offset) {
+    const sourceMeta = trackingSourceMap.get(sourceKey);
+    if (!sourceMeta) {
+      return null;
+    }
+
+    const sourceRange = sourceMeta.max - sourceMeta.min;
+    if (!sourceRange) {
+      return clamp(parameter.defaultValue + offset, parameter.min, parameter.max);
+    }
+
+    const normalized = (sourceValue - sourceMeta.min) / sourceRange;
+    const parameterRange = parameter.max - parameter.min;
+    const mapped = parameter.min + normalized * parameterRange;
+    const centered = parameter.defaultValue + (mapped - parameter.defaultValue) * strength + offset;
+    return clamp(centered, parameter.min, parameter.max);
+  }
+
+  function applyTrackingMappings(signalValues) {
+    if (!signalValues || typeof signalValues !== "object") {
+      return;
+    }
+
+    parameterDefinitions.forEach((parameter) => {
+      if (!parameter.trackingBinding || !parameter.trackingBinding.source) {
+        return;
+      }
+
+      const sourceValue = signalValues[parameter.trackingBinding.source];
+      if (!Number.isFinite(sourceValue)) {
+        return;
+      }
+
+      const mappedValue = mapTrackingValueToParameter(
+        parameter,
+        parameter.trackingBinding.source,
+        sourceValue,
+        parameter.trackingBinding.strength,
+        parameter.trackingBinding.offset
+      );
+
+      if (mappedValue === null) {
+        return;
+      }
+
+      trackingOverrides.set(parameter.id, mappedValue);
+    });
+  }
+
   function findParameterByNames(names) {
     const normalized = names.map((name) => name.toLowerCase());
     return parameterDefinitions.find((parameter) => normalized.includes(parameter.id.toLowerCase()));
@@ -525,6 +762,14 @@
     return category ? category.score : 0;
   }
 
+  function average(values) {
+    if (!values.length) {
+      return 0;
+    }
+
+    return values.reduce((sum, value) => sum + value, 0) / values.length;
+  }
+
   function updateTrackingFromResult(result) {
     if (!result || !result.faceBlendshapes || !result.faceBlendshapes.length || !result.faceLandmarks || !result.faceLandmarks.length) {
       trackingOverrides.clear();
@@ -538,8 +783,12 @@
     const rightCheek = landmarks[454];
     const forehead = landmarks[10];
     const chin = landmarks[152];
+    const mouthLeftCorner = landmarks[61];
+    const mouthRightCorner = landmarks[291];
+    const upperLip = landmarks[13];
+    const lowerLip = landmarks[14];
 
-    if (!nose || !leftCheek || !rightCheek || !forehead || !chin) {
+    if (!nose || !leftCheek || !rightCheek || !forehead || !chin || !mouthLeftCorner || !mouthRightCorner || !upperLip || !lowerLip) {
       trackingOverrides.clear();
       return;
     }
@@ -549,22 +798,47 @@
     const yaw = ((nose.x - (leftCheek.x + rightCheek.x) / 2) / faceWidth) * 120;
     const pitch = (((forehead.y + chin.y) / 2 - nose.y) / faceHeight) * 140;
     const roll = (leftCheek.y - rightCheek.y) * 220;
+    const mouthCenterX = (mouthLeftCorner.x + mouthRightCorner.x) / 2;
+    const mouthCenterY = (upperLip.y + lowerLip.y) / 2;
+    const mouthHorizontalFromLandmarks = ((mouthCenterX - nose.x) / faceWidth) * 9;
+    const mouthVerticalFromLandmarks = clamp(((lowerLip.y - upperLip.y) / faceHeight) * 11, 0, 1.4);
 
     const eyeOpenLeft = 1 - getBlendshapeScore(categories, "eyeBlinkLeft");
     const eyeOpenRight = 1 - getBlendshapeScore(categories, "eyeBlinkRight");
-    const mouthOpen = getBlendshapeScore(categories, "jawOpen");
-    const mouthSmile = (
-      getBlendshapeScore(categories, "mouthSmileLeft") +
-      getBlendshapeScore(categories, "mouthSmileRight")
-    ) / 2;
+    const eyeSquintLeft = getBlendshapeScore(categories, "eyeSquintLeft");
+    const eyeSquintRight = getBlendshapeScore(categories, "eyeSquintRight");
+    const eyeWideLeft = getBlendshapeScore(categories, "eyeWideLeft");
+    const eyeWideRight = getBlendshapeScore(categories, "eyeWideRight");
+    const jawOpen = getBlendshapeScore(categories, "jawOpen");
+    const mouthSmileLeft = getBlendshapeScore(categories, "mouthSmileLeft");
+    const mouthSmileRight = getBlendshapeScore(categories, "mouthSmileRight");
+    const mouthSmile = (mouthSmileLeft + mouthSmileRight) / 2;
+    const mouthLeft = getBlendshapeScore(categories, "mouthLeft");
+    const mouthRight = getBlendshapeScore(categories, "mouthRight");
+    const mouthStretchLeft = getBlendshapeScore(categories, "mouthStretchLeft");
+    const mouthStretchRight = getBlendshapeScore(categories, "mouthStretchRight");
+    const mouthFunnel = getBlendshapeScore(categories, "mouthFunnel");
+    const mouthPucker = getBlendshapeScore(categories, "mouthPucker");
+    const mouthShrugUpper = getBlendshapeScore(categories, "mouthShrugUpper");
+    const mouthShrugLower = getBlendshapeScore(categories, "mouthShrugLower");
+    const jawLeft = getBlendshapeScore(categories, "jawLeft");
+    const jawRight = getBlendshapeScore(categories, "jawRight");
     const browOuterUpLeft = getBlendshapeScore(categories, "browOuterUpLeft");
     const browOuterUpRight = getBlendshapeScore(categories, "browOuterUpRight");
     const browDownLeft = getBlendshapeScore(categories, "browDownLeft");
     const browDownRight = getBlendshapeScore(categories, "browDownRight");
+    const browInnerUp = getBlendshapeScore(categories, "browInnerUp");
     const cheek = (
       getBlendshapeScore(categories, "cheekSquintLeft") +
       getBlendshapeScore(categories, "cheekSquintRight")
     ) / 2;
+    const mouthOpen = clamp(Math.max(jawOpen, mouthVerticalFromLandmarks), 0, 1.35);
+    const mouthX = clamp(
+      ((mouthRight + mouthStretchRight) - (mouthLeft + mouthStretchLeft)) * 1.35 + mouthHorizontalFromLandmarks,
+      -1.2,
+      1.2
+    );
+    const jawX = clamp((jawRight - jawLeft) * 1.7 + mouthHorizontalFromLandmarks * 0.4, -1.1, 1.1);
 
     trackingRawState = {
       yaw,
@@ -572,10 +846,23 @@
       roll,
       eyeOpenLeft,
       eyeOpenRight,
+      eyeSquintLeft,
+      eyeSquintRight,
+      eyeWideLeft,
+      eyeWideRight,
       mouthOpen,
+      mouthX,
       mouthSmile,
+      mouthSmileLeft,
+      mouthSmileRight,
+      mouthFunnel,
+      mouthPucker,
+      mouthShrugUpper,
+      mouthShrugLower,
+      jawX,
       browLeft: browOuterUpLeft - browDownLeft,
       browRight: browOuterUpRight - browDownRight,
+      browInnerUp,
       eyeBallX: clamp(yaw / 30, -1, 1),
       eyeBallY: clamp(pitch / 30, -1, 1),
       cheek
@@ -584,39 +871,100 @@
     const correctedYaw = trackingRawState.yaw - trackingPoseNeutral.yaw;
     const correctedPitch = trackingRawState.pitch - trackingPoseNeutral.pitch;
     const correctedRoll = trackingRawState.roll - trackingPoseNeutral.roll;
-    const smoothYaw = smoothTrackingValue("yaw", correctedYaw, 0.18);
-    const smoothPitch = smoothTrackingValue("pitch", correctedPitch, 0.16);
-    const smoothRoll = smoothTrackingValue("roll", correctedRoll, 0.2);
-    const smoothEyeLeft = smoothTrackingValue("eyeOpenLeft", trackingRawState.eyeOpenLeft, 0.4);
-    const smoothEyeRight = smoothTrackingValue("eyeOpenRight", trackingRawState.eyeOpenRight, 0.4);
-    const smoothMouthOpen = smoothTrackingValue("mouthOpen", trackingRawState.mouthOpen, 0.3);
-    const smoothMouthSmile = smoothTrackingValue("mouthSmile", trackingRawState.mouthSmile, 0.2);
-    const smoothBrowLeft = smoothTrackingValue("browLeft", trackingRawState.browLeft, 0.2);
-    const smoothBrowRight = smoothTrackingValue("browRight", trackingRawState.browRight, 0.2);
-    const smoothEyeBallX = smoothTrackingValue("eyeBallX", trackingRawState.eyeBallX, 0.22);
-    const smoothEyeBallY = smoothTrackingValue("eyeBallY", trackingRawState.eyeBallY, 0.22);
-    const smoothCheek = smoothTrackingValue("cheek", trackingRawState.cheek, 0.2);
+    const smoothYaw = smoothTrackingValue("yaw", correctedYaw, { rise: 0.22, fall: 0.18, boost: 0.03, min: 0.12, max: 0.72 });
+    const smoothPitch = smoothTrackingValue("pitch", correctedPitch, { rise: 0.2, fall: 0.16, boost: 0.03, min: 0.11, max: 0.68 });
+    const smoothRoll = smoothTrackingValue("roll", correctedRoll, { rise: 0.24, fall: 0.18, boost: 0.04, min: 0.12, max: 0.74 });
+    const smoothEyeLeft = smoothTrackingValue("eyeOpenLeft", trackingRawState.eyeOpenLeft, { rise: 0.42, fall: 0.62, boost: 0.16, min: 0.2, max: 0.9 });
+    const smoothEyeRight = smoothTrackingValue("eyeOpenRight", trackingRawState.eyeOpenRight, { rise: 0.42, fall: 0.62, boost: 0.16, min: 0.2, max: 0.9 });
+    const smoothEyeSquintLeft = smoothTrackingValue("eyeSquintLeft", trackingRawState.eyeSquintLeft, { rise: 0.34, fall: 0.24, boost: 0.14, min: 0.16, max: 0.8 });
+    const smoothEyeSquintRight = smoothTrackingValue("eyeSquintRight", trackingRawState.eyeSquintRight, { rise: 0.34, fall: 0.24, boost: 0.14, min: 0.16, max: 0.8 });
+    const smoothEyeWideLeft = smoothTrackingValue("eyeWideLeft", trackingRawState.eyeWideLeft, { rise: 0.3, fall: 0.22, boost: 0.12, min: 0.15, max: 0.76 });
+    const smoothEyeWideRight = smoothTrackingValue("eyeWideRight", trackingRawState.eyeWideRight, { rise: 0.3, fall: 0.22, boost: 0.12, min: 0.15, max: 0.76 });
+    const smoothMouthOpen = smoothTrackingValue("mouthOpen", trackingRawState.mouthOpen, { rise: 0.34, fall: 0.22, boost: 0.12, min: 0.14, max: 0.8 });
+    const smoothMouthX = smoothTrackingValue("mouthX", trackingRawState.mouthX, { rise: 0.28, fall: 0.28, boost: 0.1, min: 0.12, max: 0.76 });
+    const smoothMouthSmile = smoothTrackingValue("mouthSmile", trackingRawState.mouthSmile, { rise: 0.26, fall: 0.18, boost: 0.1, min: 0.12, max: 0.72 });
+    const smoothMouthSmileLeft = smoothTrackingValue("mouthSmileLeft", trackingRawState.mouthSmileLeft, { rise: 0.28, fall: 0.2, boost: 0.1, min: 0.12, max: 0.72 });
+    const smoothMouthSmileRight = smoothTrackingValue("mouthSmileRight", trackingRawState.mouthSmileRight, { rise: 0.28, fall: 0.2, boost: 0.1, min: 0.12, max: 0.72 });
+    const smoothMouthFunnel = smoothTrackingValue("mouthFunnel", trackingRawState.mouthFunnel, { rise: 0.28, fall: 0.18, boost: 0.1, min: 0.1, max: 0.7 });
+    const smoothMouthPucker = smoothTrackingValue("mouthPucker", trackingRawState.mouthPucker, { rise: 0.32, fall: 0.18, boost: 0.12, min: 0.12, max: 0.76 });
+    const smoothMouthShrugUpper = smoothTrackingValue("mouthShrugUpper", trackingRawState.mouthShrugUpper, { rise: 0.26, fall: 0.18, boost: 0.1, min: 0.1, max: 0.68 });
+    const smoothMouthShrugLower = smoothTrackingValue("mouthShrugLower", trackingRawState.mouthShrugLower, { rise: 0.26, fall: 0.18, boost: 0.1, min: 0.1, max: 0.68 });
+    const smoothJawX = smoothTrackingValue("jawX", trackingRawState.jawX, { rise: 0.26, fall: 0.26, boost: 0.1, min: 0.12, max: 0.72 });
+    const smoothBrowLeft = smoothTrackingValue("browLeft", trackingRawState.browLeft, { rise: 0.24, fall: 0.18, boost: 0.08, min: 0.1, max: 0.66 });
+    const smoothBrowRight = smoothTrackingValue("browRight", trackingRawState.browRight, { rise: 0.24, fall: 0.18, boost: 0.08, min: 0.1, max: 0.66 });
+    const smoothBrowInnerUp = smoothTrackingValue("browInnerUp", trackingRawState.browInnerUp, { rise: 0.24, fall: 0.16, boost: 0.08, min: 0.1, max: 0.66 });
+    const smoothEyeBallX = smoothTrackingValue("eyeBallX", trackingRawState.eyeBallX, { rise: 0.3, fall: 0.3, boost: 0.1, min: 0.12, max: 0.76 });
+    const smoothEyeBallY = smoothTrackingValue("eyeBallY", trackingRawState.eyeBallY, { rise: 0.3, fall: 0.3, boost: 0.1, min: 0.12, max: 0.76 });
+    const smoothCheek = smoothTrackingValue("cheek", trackingRawState.cheek, { rise: 0.24, fall: 0.18, boost: 0.08, min: 0.1, max: 0.66 });
+    const smoothSmileAverage = average([smoothMouthSmile, smoothMouthSmileLeft, smoothMouthSmileRight]);
+
+    currentTrackingSignals = {
+      yaw: smoothYaw,
+      pitch: smoothPitch,
+      roll: smoothRoll,
+      bodyYaw: smoothYaw * 0.42,
+      bodyPitch: smoothPitch * 0.28,
+      bodyRoll: smoothRoll * 0.38,
+      eyeOpenLeft: smoothEyeLeft,
+      eyeOpenRight: smoothEyeRight,
+      eyeSquintLeft: smoothEyeSquintLeft,
+      eyeSquintRight: smoothEyeSquintRight,
+      eyeWideLeft: smoothEyeWideLeft,
+      eyeWideRight: smoothEyeWideRight,
+      eyeBallX: smoothEyeBallX,
+      eyeBallY: smoothEyeBallY,
+      mouthOpen: smoothMouthOpen,
+      mouthX: smoothMouthX,
+      mouthSmile: smoothSmileAverage,
+      mouthSmileLeft: smoothMouthSmileLeft,
+      mouthSmileRight: smoothMouthSmileRight,
+      mouthFunnel: smoothMouthFunnel,
+      mouthPucker: smoothMouthPucker,
+      mouthShrugUpper: smoothMouthShrugUpper,
+      mouthShrugLower: smoothMouthShrugLower,
+      jawX: smoothJawX,
+      browLeft: smoothBrowLeft + smoothBrowInnerUp * 0.35,
+      browRight: smoothBrowRight + smoothBrowInnerUp * 0.35,
+      browInnerUp: smoothBrowInnerUp,
+      cheek: smoothCheek
+    };
 
     trackingOverrides.clear();
-    setTrackingParameter(["ParamAngleX", "anglex", "x"], smoothYaw, -30, 30);
-    setTrackingParameter(["ParamAngleY", "angley", "y"], smoothPitch, -30, 30);
-    setTrackingParameter(["ParamAngleZ", "anglez", "z"], smoothRoll, -30, 30);
-    setTrackingParameter(["ParamEyeBallX"], smoothEyeBallX, -1, 1);
-    setTrackingParameter(["ParamEyeBallY"], smoothEyeBallY, -1, 1);
-    setTrackingParameter(["ParamBodyAngleX"], smoothYaw * 0.42, -15, 15);
-    setTrackingParameter(["ParamBodyAngleY"], smoothPitch * 0.28, -10, 10);
-    setTrackingParameter(["ParamBodyAngleZ"], smoothRoll * 0.38, -15, 15);
-    setTrackingParameter(["ParamEyeLOpen"], smoothEyeLeft, 0, 1);
-    setTrackingParameter(["ParamEyeROpen"], smoothEyeRight, 0, 1);
-    setTrackingParameter(["ParamMouthOpenY"], smoothMouthOpen, 0, 1);
-    setTrackingParameter(["ParamMouthForm"], smoothMouthSmile * 2 - 1, -1, 1);
-    setTrackingParameter(["ParamBrowLY"], smoothBrowLeft, -1, 1);
-    setTrackingParameter(["ParamBrowRY"], smoothBrowRight, -1, 1);
-    setTrackingParameter(["ParamBrowLX"], smoothYaw / 20, -1, 1);
-    setTrackingParameter(["ParamBrowRX"], smoothYaw / 20, -1, 1);
-    setTrackingParameter(["ParamCheek"], smoothCheek, 0, 1);
-    setTrackingParameter(["ParamEyeLSmile"], smoothMouthSmile, 0, 1);
-    setTrackingParameter(["ParamEyeRSmile"], smoothMouthSmile, 0, 1);
+    setTrackingParameter(["ParamAngleX", "anglex", "x"], currentTrackingSignals.yaw, -30, 30);
+    setTrackingParameter(["ParamAngleY", "angley", "y"], currentTrackingSignals.pitch, -30, 30);
+    setTrackingParameter(["ParamAngleZ", "anglez", "z"], currentTrackingSignals.roll, -30, 30);
+    setTrackingParameter(["ParamEyeBallX"], currentTrackingSignals.eyeBallX, -1, 1);
+    setTrackingParameter(["ParamEyeBallY"], currentTrackingSignals.eyeBallY, -1, 1);
+    setTrackingParameter(["ParamBodyAngleX"], currentTrackingSignals.bodyYaw, -15, 15);
+    setTrackingParameter(["ParamBodyAngleY"], currentTrackingSignals.bodyPitch, -10, 10);
+    setTrackingParameter(["ParamBodyAngleZ"], currentTrackingSignals.bodyRoll, -15, 15);
+    setTrackingParameter(["ParamEyeLOpen"], currentTrackingSignals.eyeOpenLeft, 0, 1);
+    setTrackingParameter(["ParamEyeROpen"], currentTrackingSignals.eyeOpenRight, 0, 1);
+    setTrackingParameter(["ParamMouthOpenY"], currentTrackingSignals.mouthOpen, 0, 1);
+    setTrackingParameter(["ParamMouthOpenX", "ParamMouthX"], currentTrackingSignals.mouthX, -1, 1);
+    setTrackingParameter(["ParamMouthForm"], clamp((currentTrackingSignals.mouthSmile - currentTrackingSignals.mouthPucker) * 2 - 1, -1, 1), -1, 1);
+    setTrackingParameter(["ParamMouthSmile", "ParamSmile"], currentTrackingSignals.mouthSmile, 0, 1);
+    setTrackingParameter(["ParamMouthSmileLeft"], currentTrackingSignals.mouthSmileLeft, 0, 1);
+    setTrackingParameter(["ParamMouthSmileRight"], currentTrackingSignals.mouthSmileRight, 0, 1);
+    setTrackingParameter(["ParamMouthFunnel"], currentTrackingSignals.mouthFunnel, 0, 1);
+    setTrackingParameter(["ParamMouthPucker"], currentTrackingSignals.mouthPucker, 0, 1);
+    setTrackingParameter(["ParamMouthShrugUpper"], currentTrackingSignals.mouthShrugUpper, 0, 1);
+    setTrackingParameter(["ParamMouthShrugLower"], currentTrackingSignals.mouthShrugLower, 0, 1);
+    setTrackingParameter(["ParamJawX"], currentTrackingSignals.jawX, -1, 1);
+    setTrackingParameter(["ParamJawOpen"], currentTrackingSignals.mouthOpen, 0, 1);
+    setTrackingParameter(["ParamBrowLY"], currentTrackingSignals.browLeft, -1, 1);
+    setTrackingParameter(["ParamBrowRY"], currentTrackingSignals.browRight, -1, 1);
+    setTrackingParameter(["ParamBrowLX"], currentTrackingSignals.yaw / 20, -1, 1);
+    setTrackingParameter(["ParamBrowRX"], currentTrackingSignals.yaw / 20, -1, 1);
+    setTrackingParameter(["ParamBrowInnerUp"], currentTrackingSignals.browInnerUp, 0, 1);
+    setTrackingParameter(["ParamCheek"], currentTrackingSignals.cheek, 0, 1);
+    setTrackingParameter(["ParamEyeLSmile"], currentTrackingSignals.mouthSmileLeft, 0, 1);
+    setTrackingParameter(["ParamEyeRSmile"], currentTrackingSignals.mouthSmileRight, 0, 1);
+    setTrackingParameter(["ParamEyeLSquint"], currentTrackingSignals.eyeSquintLeft, 0, 1);
+    setTrackingParameter(["ParamEyeRSquint"], currentTrackingSignals.eyeSquintRight, 0, 1);
+    setTrackingParameter(["ParamEyeLSurprised", "ParamEyeLWide"], currentTrackingSignals.eyeWideLeft, 0, 1);
+    setTrackingParameter(["ParamEyeRSurprised", "ParamEyeRWide"], currentTrackingSignals.eyeWideRight, 0, 1);
+    applyTrackingMappings(currentTrackingSignals);
   }
 
   async function createTrackingLandmarker() {
@@ -640,9 +988,9 @@
       },
       runningMode: "VIDEO",
       numFaces: 1,
-      minFaceDetectionConfidence: 0.5,
-      minFacePresenceConfidence: 0.5,
-      minTrackingConfidence: 0.5,
+      minFaceDetectionConfidence: 0.45,
+      minFacePresenceConfidence: 0.45,
+      minTrackingConfidence: 0.45,
       outputFaceBlendshapes: true
     });
 
