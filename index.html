@@ -4,33 +4,66 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VT Mini Studio</title>
-  <link rel="stylesheet" href="./styles.css?v=5">
+  <link rel="stylesheet" href="./styles.css?v=6">
 </head>
 <body>
   <main class="stage">
     <div id="viewer-host" class="viewer-host"></div>
     <button id="prev-model" class="model-arrow model-arrow--left" type="button" aria-label="Previous model">&#8249;</button>
     <button id="next-model" class="model-arrow model-arrow--right" type="button" aria-label="Next model">&#8250;</button>
-    <aside id="param-panel" class="param-panel">
-      <div class="param-panel__header">
+    <aside id="param-panel" class="studio-dock">
+      <div class="studio-dock__header">
         <div>
-          <h2>Parameters</h2>
+          <p class="studio-kicker">Mini Studio</p>
+          <h2>Live2D Control Deck</h2>
           <p id="model-name" class="model-name"></p>
         </div>
-        <button id="reset-params" type="button">Reset</button>
+        <span id="tracking-status" class="tracking-pill">Offline</span>
       </div>
-      <div class="tracking-bar">
-        <button id="toggle-tracking" type="button">Start Face Tracking</button>
-        <button id="calibrate-tracking" type="button">Calibrate</button>
-        <span id="tracking-status" class="tracking-status">Off</span>
+
+      <div class="studio-toolbar">
+        <button id="center-model" type="button">Center</button>
+        <button id="reset-params" type="button">Reset Params</button>
+        <button id="reset-mappings" type="button">Reset Map</button>
       </div>
-      <video id="tracking-video" class="tracking-video" autoplay playsinline muted hidden></video>
-      <input id="param-search" class="param-search" type="search" placeholder="Search parameter id">
-      <div id="param-list" class="param-list"></div>
+
+      <div class="studio-tabs" role="tablist" aria-label="Control panels">
+        <button class="studio-tab is-active" type="button" data-panel-target="tracker">Tracker</button>
+        <button class="studio-tab" type="button" data-panel-target="parameters">Parameters</button>
+      </div>
+
+      <section class="dock-panel is-active" data-panel-view="tracker">
+        <div class="tracking-card">
+          <div class="tracking-card__copy">
+            <h3>Face Tracking</h3>
+            <p>Drive the rig with live face capture and calibrate your neutral pose.</p>
+          </div>
+          <div class="tracking-bar">
+            <button id="toggle-tracking" type="button">Start Tracking</button>
+            <button id="calibrate-tracking" type="button">Calibrate</button>
+          </div>
+          <video id="tracking-video" class="tracking-video" autoplay playsinline muted hidden></video>
+        </div>
+
+        <div class="signal-card">
+          <div class="signal-card__header">
+            <div>
+              <p class="studio-kicker">Tracking Inputs</p>
+              <h3>Live Signal Monitor</h3>
+            </div>
+          </div>
+          <div id="signal-list" class="signal-list"></div>
+        </div>
+      </section>
+
+      <section class="dock-panel" data-panel-view="parameters">
+        <input id="param-search" class="param-search" type="search" placeholder="Search parameter id">
+        <div id="param-list" class="param-list"></div>
+      </section>
     </aside>
   </main>
 
   <script src="https://unpkg.com/oh-my-live2d@latest"></script>
-  <script src="./app.js?v=8"></script>
+  <script src="./app.js?v=9"></script>
 </body>
 </html>

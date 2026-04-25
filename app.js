@@ -10,6 +10,11 @@
   const paramSearch = document.getElementById("param-search");
   const paramList = document.getElementById("param-list");
   const resetParamsButton = document.getElementById("reset-params");
+  const resetMappingsButton = document.getElementById("reset-mappings");
+  const centerModelButton = document.getElementById("center-model");
+  const signalList = document.getElementById("signal-list");
+  const panelTabs = Array.from(document.querySelectorAll("[data-panel-target]"));
+  const panelViews = Array.from(document.querySelectorAll("[data-panel-view]"));
   const appBaseUrl = new URL("./", window.location.href);
   const manifestUrl = new URL("models/models.json", appBaseUrl);
   const trackingSourceOptions = [
@@ -45,6 +50,23 @@
   ];
   const trackingSourceMap = new Map(trackingSourceOptions.map((source) => [source.key, source]));
   const mappingStoragePrefix = "vt-mini-studio:mapping:";
+  const signalMonitorKeys = [
+    "yaw",
+    "pitch",
+    "roll",
+    "eyeOpenLeft",
+    "eyeOpenRight",
+    "eyeBallX",
+    "eyeBallY",
+    "mouthOpen",
+    "mouthX",
+    "mouthSmile",
+    "mouthPucker",
+    "jawX",
+    "browLeft",
+    "browRight",
+    "cheek"
+  ];
   let modelPaths = [
     "models/amongus/amongus.model3.json"
   ];
@@ -291,6 +313,16 @@
     return `${mappingStoragePrefix}${getCurrentModelPath() || "default"}`;
   }
 
+  function setActivePanel(panelName) {
+    panelTabs.forEach((tab) => {
+      tab.classList.toggle("is-active", tab.dataset.panelTarget === panelName);
+    });
+
+    panelViews.forEach((view) => {
+      view.classList.toggle("is-active", view.dataset.panelView === panelName);
+    });
+  }
+
   function loadStoredTrackingBindings() {
     try {
       const raw = window.localStorage.getItem(getCurrentMappingStorageKey());
@@ -369,6 +401,70 @@
     }
 
     modelName.textContent = decodeURIComponent(currentModelPath.replace(/^models\//, ""));
+  }
+
+  function updateTrackingStatus(text, isLive) {
+    trackingStatus.textContent = text;
+    trackingStatus.classList.toggle("is-live", Boolean(isLive));
+  }
+
+  function createSignalItem(source) {
+    const item = document.createElement("div");
+    item.className = "signal-item";
+    item.dataset.signalKey = source.key;
+
+    const top = document.createElement("div");
+    top.className = "signal-item__top";
+
+    const label = document.createElement("span");
+    label.className = "signal-item__label";
+    label.textContent = source.label;
+
+    const value = document.createElement("span");
+    value.className = "signal-item__value";
+    value.textContent = "0.00";
+
+    const track = document.createElement("div");
+    track.className = "signal-item__track";
+
+    const fill = document.createElement("div");
+    fill.className = "signal-item__fill";
+
+    track.append(fill);
+    top.append(label, value);
+    item.append(top, track);
+    source.element = item;
+    source.valueElement = value;
+    source.fillElement = fill;
+    return item;
+  }
+
+  function renderSignalMonitor() {
+    signalList.innerHTML = "";
+    signalMonitorKeys.forEach((key) => {
+      const source = trackingSourceMap.get(key);
+      if (!source) {
+        return;
+      }
+
+      signalList.append(createSignalItem(source));
+    });
+  }
+
+  function updateSignalMonitor(signalValues) {
+    signalMonitorKeys.forEach((key) => {
+      const source = trackingSourceMap.get(key);
+      if (!source || !source.valueElement || !source.fillElement) {
+        return;
+      }
+
+      const value = Number(signalValues && Number.isFinite(signalValues[key]) ? signalValues[key] : 0);
+      const min = Number.isFinite(source.min) ? source.min : -1;
+      const max = Number.isFinite(source.max) ? source.max : 1;
+      const normalized = max === min ? 0.5 : clamp((value - min) / (max - min), 0, 1);
+      source.valueElement.textContent = value.toFixed(2);
+      source.fillElement.style.width = `${(normalized * 100).toFixed(1)}%`;
+    });
   }
 
   function setParameterValue(parameter, nextValue) {
@@ -650,6 +746,38 @@
     });
   }
 
+  function resetTrackingBindings() {
+    try {
+      window.localStorage.removeItem(getCurrentMappingStorageKey());
+    } catch (error) {
+      console.warn("Could not clear saved tracking mappings.", error);
+    }
+
+    parameterDefinitions.forEach((parameter) => {
+      parameter.trackingBinding = {
+        source: "",
+        strength: 1,
+        offset: 0
+      };
+
+      if (parameter.mappingSourceInput) {
+        parameter.mappingSourceInput.value = "";
+      }
+
+      if (parameter.mappingStrengthInput) {
+        parameter.mappingStrengthInput.value = "1";
+      }
+
+      if (parameter.mappingOffsetInput) {
+        parameter.mappingOffsetInput.value = "0";
+      }
+    });
+
+    if (trackingActive) {
+      applyTrackingMappings(currentTrackingSignals);
+    }
+  }
+
   function startParameterSync() {
     window.clearInterval(parameterSyncTimer);
     parameterDefinitions = [];
@@ -749,10 +877,10 @@
       pitch: trackingRawState.pitch,
       roll: trackingRawState.roll
     };
-    updateTrackingStatus("Calibrated");
+    updateTrackingStatus("Calibrated", true);
     window.setTimeout(() => {
       if (trackingActive) {
-        updateTrackingStatus("On");
+        updateTrackingStatus("Live", true);
       }
     }, 1200);
   }
@@ -773,6 +901,8 @@
   function updateTrackingFromResult(result) {
     if (!result || !result.faceBlendshapes || !result.faceBlendshapes.length || !result.faceLandmarks || !result.faceLandmarks.length) {
       trackingOverrides.clear();
+      currentTrackingSignals = {};
+      updateSignalMonitor(currentTrackingSignals);
       return;
     }
 
@@ -965,6 +1095,7 @@
     setTrackingParameter(["ParamEyeLSurprised", "ParamEyeLWide"], currentTrackingSignals.eyeWideLeft, 0, 1);
     setTrackingParameter(["ParamEyeRSurprised", "ParamEyeRWide"], currentTrackingSignals.eyeWideRight, 0, 1);
     applyTrackingMappings(currentTrackingSignals);
+    updateSignalMonitor(currentTrackingSignals);
   }
 
   async function createTrackingLandmarker() {
@@ -1004,10 +1135,6 @@
     }
   }
 
-  function updateTrackingStatus(text) {
-    trackingStatus.textContent = text;
-  }
-
   function trackingLoop() {
     if (!trackingActive || !trackingLandmarker || !trackingVideo.srcObject) {
       stopTrackingLoop();
@@ -1026,7 +1153,7 @@
   async function startFaceTracking() {
     try {
       if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
-        updateTrackingStatus("Use localhost or HTTPS");
+        updateTrackingStatus("Use localhost or HTTPS", false);
         return;
       }
 
@@ -1052,13 +1179,13 @@
         roll: trackingRawState.roll
       };
       disableMouseFollow();
-      toggleTrackingButton.textContent = "Stop Face Tracking";
+      toggleTrackingButton.textContent = "Stop Tracking";
       calibrateTrackingButton.disabled = false;
-      updateTrackingStatus("On");
+      updateTrackingStatus("Live", true);
       trackingLoop();
     } catch (error) {
       console.error(error);
-      updateTrackingStatus("Tracking failed");
+      updateTrackingStatus("Tracking failed", false);
     }
   }
 
@@ -1073,9 +1200,11 @@
     trackingVideo.pause();
     trackingVideo.srcObject = null;
     trackingVideo.hidden = true;
-    toggleTrackingButton.textContent = "Start Face Tracking";
+    toggleTrackingButton.textContent = "Start Tracking";
     calibrateTrackingButton.disabled = true;
-    updateTrackingStatus("Off");
+    currentTrackingSignals = {};
+    updateSignalMonitor(currentTrackingSignals);
+    updateTrackingStatus("Offline", false);
   }
 
   async function toggleFaceTracking() {
@@ -1084,7 +1213,7 @@
       return;
     }
 
-    updateTrackingStatus("Starting...");
+    updateTrackingStatus("Starting...", false);
     await startFaceTracking();
   }
 
@@ -1225,15 +1354,25 @@
     bindStageInteractions();
     prevModelButton.addEventListener("click", () => switchModel(-1));
     nextModelButton.addEventListener("click", () => switchModel(1));
+    panelTabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        setActivePanel(tab.dataset.panelTarget);
+      });
+    });
     toggleTrackingButton.addEventListener("click", () => {
       toggleFaceTracking();
     });
     calibrateTrackingButton.addEventListener("click", () => {
       calibrateTrackingNeutral();
     });
+    centerModelButton.addEventListener("click", resetView);
     calibrateTrackingButton.disabled = true;
     paramSearch.addEventListener("input", filterParameterPanel);
     resetParamsButton.addEventListener("click", resetParameterOverrides);
+    resetMappingsButton.addEventListener("click", resetTrackingBindings);
+    renderSignalMonitor();
+    updateSignalMonitor({});
+    updateTrackingStatus("Offline", false);
     ensureAnimationLoop();
   }
 
